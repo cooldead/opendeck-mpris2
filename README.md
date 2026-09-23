@@ -1,42 +1,73 @@
 # MPRIS2 Media for OpenDeck
 
-Linux media controls for OpenDeck, with Strawberry selected by default and a
-shared player selector for all plugin controls. Derived from OpenAction MPRIS 1.4.0.
+Simple Linux media controls for OpenDeck using MPRIS2.
 
-The original plugin already uses MPRIS2, but chooses the first player returned
-by D-Bus. When browsers or other players are running, that can control the wrong
-application. This project uses explicit selection and periodically refreshes
-state so players can start, stop, and restart while OpenDeck remains open.
+This plugin lets your Stream Deck control a specific media player instead of whichever MPRIS2 player D-Bus happens to return first. It was created primarily for Strawberry, but it can work with other MPRIS2-compatible players.
 
-## Controls
+## Features
 
-- Album Artwork: live cover display and shared player dropdown in its settings
-- Play/Pause, Stop, Previous, Next
-- Repeat: None → Playlist → Track → None
+- Album artwork, including automatic 2×2 and 3×3 cover layouts
+- Play / Pause
+- Stop
+- Previous / Next
+- Repeat
 - Shuffle
-- Seek backward/forward by 10 seconds
-- Volume down/up by 5 percentage points, clamped to 0–100%
+- Seek backward / forward 10 seconds
+- Volume down / up 5%
+- One shared media-player selection for all plugin buttons
+- Automatically reconnects when a selected player is closed and reopened
 
-Play/Pause uses two states: **Playing** (showing the pause symbol)
-and **Paused / Stopped** (showing the play symbol). Text is hidden by
-default. Enable **Show playback status text** in that button's settings if wanted.
-Repeat cycles through **Off → Playlist → One Song → Off**, using distinct
-off, playlist, and single-song icons. Shuffle has separate on/off icons.
-Both controls use icons only, without text labels, and follow the selected player. Other transport buttons
-show `Offline` when the player is unavailable; failed commands show an alert.
+![MPRIS2 Media actions](actions.png)
 
-The separate Album Artwork button reads `mpris:artUrl`, supports local file URLs
-(including escaped paths), HTTP/HTTPS, and base64 image data. PNG, JPEG, GIF, and
-WebP covers are supported up to 8 MiB. Covers are cached and refreshed when the
-player, track, URL, or local file changes. Missing/unreadable artwork restores
-the record icon. The artwork button does not trigger playback when pressed;
-select it in OpenDeck to access the player dropdown.
+# Installation
 
-## Large album cover: 2×2 or 3×3
+> [!IMPORTANT]
+> **This plugin is for Linux and OpenDeck.** It is not an official Elgato Stream Deck plugin and is not intended for the official Stream Deck software on Windows or macOS.
 
-Place four adjacent **Album Artwork** buttons for 2×2, or nine for 3×3, and leave
-**Artwork layout** set to **Auto** (the default). The plugin reads each button's
-deck position and assigns its tile from left to right, top to bottom.
+## Recommended: install the release package
+
+1. Open the [latest GitHub release](https://github.com/cooldead/opendeck-mpris2/releases/latest).
+2. Download the `.streamDeckPlugin` file for your system.
+3. Open **OpenDeck**.
+4. Import/install the downloaded `.streamDeckPlugin` file using OpenDeck's plugin import feature.
+5. Restart OpenDeck if the new actions do not appear immediately.
+6. Find **MPRIS2 Media** in the OpenDeck action list and drag the controls you want onto your deck.
+
+For most users, **you do not need Rust, Python, Node.js, or playerctl installed**. Those are only needed when building the plugin from source.
+
+> [!WARNING]
+> **If you already use the original “Linux Media” plugin, its existing buttons will not automatically become MPRIS2 Media buttons.** This plugin has its own ID (`com.cooldead.mpris2`). Add new **MPRIS2 Media** actions to your deck. Both plugins can be installed at the same time.
+
+## Choose your media player
+
+Select an **Album Artwork** or **Play/Pause** button in OpenDeck. In its settings, use **Media player — all plugin controls** to choose the player you want to control.
+
+That selection is shared by every MPRIS2 Media button, including buttons on other profiles, and is remembered after OpenDeck restarts.
+
+The player list refreshes while the settings panel is open. You can also press **Refresh players**.
+
+**Automatic (prefer playing)** tries to use a currently playing player first, then Strawberry, then another available MPRIS2 player. If you explicitly select a player, the plugin will not silently switch to a different application when that player closes.
+
+> [!IMPORTANT]
+> Your media player must support **MPRIS2** and must be available in the **same desktop user session as OpenDeck**. If the player is running but does not appear in the list, this is one of the first things to check.
+
+### Strawberry
+
+Strawberry works with this plugin through its MPRIS2 support. Make sure Strawberry is running and MPRIS2 integration is enabled.
+
+Its normal D-Bus service is `org.mpris.MediaPlayer2.strawberry`.
+
+Strawberry MPRIS2 documentation: https://wiki.strawberrymusicplayer.org/wiki/Using_MPRIS2
+
+## Album artwork
+
+Add an **Album Artwork** action to display the current cover.
+
+The plugin supports PNG, JPEG, GIF, and WebP artwork from local files, HTTP/HTTPS URLs, and base64 image data. Missing or unreadable artwork falls back to the default record icon.
+
+### 2×2 or 3×3 large covers
+
+For a larger cover, place Album Artwork buttons next to each other:
 
 ```text
 2×2          3×3
@@ -45,92 +76,86 @@ deck position and assigns its tile from left to right, top to bottom.
              7 8 9
 ```
 
-Automatic detection works separately on each connected Stream Deck and supports
-multiple adjacent grids. Incomplete groups remain full-cover buttons. Choose **Single button** to always show the full cover, or select a manual 2×2
-or 3×3 layout and tile position if you want a specific arrangement.
-Artwork buttons on different profiles are detected from the visible grid only.
+Leave **Artwork layout** set to **Auto**. The plugin detects complete adjacent 2×2 and 3×3 groups and assigns each button its part of the image automatically.
 
-Non-square artwork is cropped centrally to a square, then divided into equal
-144×144 PNG tiles. Physical spaces between buttons remain visible; this version
-does not compensate for button gaps. Missing artwork restores the fallback icon
-on each button. Tiled covers use a static frame for animated images. Tile decoding
-is bounded to 8192 pixels per dimension and 128 MiB of decoder allocations;
-unsupported/oversized covers show the fallback icon. Tile images are cached per
-cover and layout, and refreshed when settings or the source cover change.
+Incomplete groups stay as normal full-cover buttons. You can also choose **Single button** or manually select a grid and tile position.
 
-## Build and install
+> [!NOTE]
+> The physical gaps between Stream Deck buttons remain visible. The plugin does not attempt to compensate for the spacing between keys.
 
-Requires Linux, a current stable Rust toolchain, Python 3, and OpenDeck.
-The plugin itself is a native executable: it does not need Python, Node.js,
-playerctl, or Rust installed on the destination machine.
+# Troubleshooting
+
+### The plugin installed, but I don't see its buttons
+
+Restart OpenDeck and make sure you are looking for **MPRIS2 Media**, not **Linux Media**.
+
+### My media player doesn't appear
+
+Make sure the player:
+
+- is currently running;
+- supports MPRIS2;
+- has MPRIS2 integration enabled, if the application provides an option for it; and
+- is running in the same user's desktop session as OpenDeck.
+
+### Flatpak users
+
+> [!WARNING]
+> **Flatpak sandbox permissions can prevent OpenDeck from communicating with your media player's session D-Bus service.** If the plugin installs correctly but cannot see or control any players, check the Flatpak permissions before assuming the plugin is broken.
+
+### A button says Offline
+
+`Offline` normally means the selected player is not currently available. Start the player again and the plugin should reconnect automatically.
+
+### Repeat or Shuffle does not work correctly
+
+Some MPRIS2 players do not implement every optional MPRIS property. Repeat and Shuffle behavior therefore depends on what the selected player exposes.
+
+### Plugin log
+
+OpenDeck normally stores the plugin log here:
+
+```text
+~/.local/share/opendeck/logs/plugins/com.cooldead.mpris2.sdPlugin.log
+```
+
+# Building from source
+
+You only need this section if you want to develop or build the plugin yourself.
+
+Requirements:
+
+- Linux
+- Current stable Rust toolchain
+- Python 3
+- OpenDeck for testing
+
+Build and package it with:
 
 ```sh
 python3 scripts/package.py
 ```
 
-The resulting `dist/opendeck-mpris2-0.4.0-<architecture>.streamDeckPlugin` is a
-ZIP archive for OpenDeck's plugin import. Native x86_64 and aarch64 GNU/Linux
-builds are supported; each archive contains one architecture. Local builds
-require a destination with a compatible glibc. GitHub Actions builds on Ubuntu
-24.04 for wider compatibility and uploads packages as workflow artifacts.
+Packages are written to `dist/` as `.streamDeckPlugin` files. Native x86_64 and aarch64 GNU/Linux builds are supported, with one architecture per package.
 
-For manual installation, close OpenDeck, copy the generated
-`dist/<architecture>/com.cooldead.mpris2.sdPlugin` directory into
-`${XDG_CONFIG_HOME:-$HOME/.config}/opendeck/plugins/`, and reopen OpenDeck.
-For a Flatpak installation, use OpenDeck's import flow and ensure its sandbox
-can talk to your media player's session D-Bus service.
+> [!CAUTION]
+> **Locally compiled builds depend on the glibc available on the build system.** A package built on a newer Linux distribution may not run on a system with an older glibc. The project's GitHub Actions builds use Ubuntu 24.04 to provide broader compatibility.
 
-Find **MPRIS2 Media** in the action list and drag new buttons onto the deck.
-The plugin has its own ID (`com.cooldead.mpris2`); existing **Linux Media**
-buttons still belong to the original plugin and must be replaced to use this
-one. Both plugins can be installed side by side.
+For a manual non-package installation, close OpenDeck and copy:
 
-## Player selection
-
-Select an **Album Artwork** or **Play/Pause** button in OpenDeck, then choose
-**Media player — all plugin controls** from its dropdown. It lists running MPRIS2
-players using their reported names; instance names distinguish multiple copies.
-The list refreshes automatically while the settings panel is open, and there is
-a **Refresh players** button. Closed players reappear once started. The selected
-player remains in the list as unavailable if it closes.
-
-Changes take effect across **every control in this plugin**, on every profile,
-and persist through OpenDeck/plugin restarts. Existing per-button player values
-from version 0.1 are ignored. A new global configuration defaults to Strawberry.
-Buttons keep their UUIDs, so existing MPRIS2 Media controls continue working.
-Add an Album Artwork button to use the new artwork display.
-
-**Automatic (prefer playing)** prefers a playing player, then Strawberry, then
-alphabetical bus-name order. An explicit selection never falls back to another
-application. Dropdown entries use exact running bus names; the default
-`strawberry` selector also recognizes instance-suffixed Strawberry names.
-
-Strawberry must be running with MPRIS2 enabled, in the same user's desktop
-session as OpenDeck. Its documented service is
-`org.mpris.MediaPlayer2.strawberry`:
-https://wiki.strawberrymusicplayer.org/wiki/Using_MPRIS2
-
-## Troubleshooting
-
-Run these from a terminal in your desktop session:
-
-```sh
-./target/release/opendeck-mpris2 --list-players
-./target/release/opendeck-mpris2 --diagnose strawberry
+```text
+dist/<architecture>/com.cooldead.mpris2.sdPlugin
 ```
 
-These commands only read player information. If Strawberry is missing, check
-that it is running and its MPRIS2/D-Bus integration is enabled. If the diagnostic
-works but buttons do not, check that you added **MPRIS2 Media** actions and
-restart OpenDeck after installing. The plugin log normally lives at
-`~/.local/share/opendeck/logs/plugins/com.cooldead.mpris2.sdPlugin.log`.
+to:
 
-State refresh runs once per second when visible buttons exist. Individual
-command and refresh operations have timeouts; a failed player does not terminate
-the plugin. Optional repeat/shuffle properties may be unsupported by some
-players, in which case their icons use the default state.
+```text
+${XDG_CONFIG_HOME:-$HOME/.config}/opendeck/plugins/
+```
 
-## Development and validation
+Then reopen OpenDeck.
+
+## Development checks
 
 ```sh
 cargo fmt --check
@@ -140,36 +165,22 @@ dbus-run-session -- cargo test --locked -- --ignored
 node --test tests/inspector.cjs
 ```
 
-The ignored tests require local sockets and an isolated session bus. They test
-all ten commands, volume bounds, player selection and restart recovery, plus
-OpenDeck registration, restored/saved global selection, routing across existing
-buttons, artwork display/fallback, play/pause symbols, optional status text, and
-failure alerts. Unit tests cover escaped local artwork URLs and cache refresh.
-The artwork settings default to automatic placement, with manual grid/position controls as a fallback.
-Layout tests detect 2×2, 3×3, and adjacent grids from deck positions. Tile tests
-reconstruct both grids pixel-for-pixel and check square cropping,
-layout changes, cover changes, and missing covers. Tests do not
-change desktop playback. Physical deck interaction and inspector appearance
-still need a manual check.
+The ignored tests require local sockets and an isolated session D-Bus. Physical Stream Deck behavior and the OpenDeck inspector should still be checked manually before publishing a release.
 
-## Publish to GitHub
+# AI-assisted development disclosure
 
-The project is a local Git repository. Review and commit the source, then create
-an empty GitHub repository and push:
+AI tools were used during development of this project to assist with tasks such as code generation, debugging, refactoring, documentation, and development workflow.
 
-```sh
-git add .
-git commit -m "Initial MPRIS2 media plugin"
-git remote add origin https://github.com/YOUR_USERNAME/opendeck-mpris2.git
-git push -u origin main
-```
+AI-generated or AI-assisted output was reviewed and tested by the project owner before being included. The project owner remains responsible for the code, releases, and maintenance of this project.
 
-The included workflow builds and tests both supported architectures. Download
-its artifacts and attach the `.streamDeckPlugin` packages to a GitHub release.
-No repository or release is created automatically by the local build.
+# Credits
 
-## License and attribution
+This project was derived from **OpenAction MPRIS 1.4.0** by nekename / Aman Khanna and modifies its behavior to provide explicit MPRIS2 player selection, shared player settings, artwork handling, and other OpenDeck-focused functionality.
 
-MIT; see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md). The starting plugin distribution is by nekename / Aman Khanna; current button
-icons were supplied by the project owner. This project is
-independent of [OpenDeck](https://github.com/nekename/OpenDeck) and Strawberry.
+Current button icons were supplied by the project owner.
+
+This project is independent of OpenDeck and Strawberry and is not officially affiliated with either project.
+
+# License
+
+MIT. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for license and attribution information.
