@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MPRIS2 Media settings</title>
+<style>
+body { background:#282828; color:#eee; font:13px system-ui,sans-serif; margin:18px; }
+label { display:block; margin-bottom:8px; }
+input[type="checkbox"] { accent-color:#fff; }
+pre { color:#fff; background:#000; padding:10px; border-radius:4px; }
+select,button { padding:8px; color:#000; background:#fff; border:1px solid #777; border-radius:4px; }
+select { width:100%; margin-bottom:8px; color:#000; background-color:#fff; }
+option { color:#000; background-color:#fff; } p { color:#bbb; line-height:1.5; }
+[hidden] { display:none !important; }
+</style>
+<section id="selector">
+<label for="player">Media player — all plugin controls</label>
+<select id="player" disabled><option>Loading players…</option></select>
+<button id="refresh" type="button">Refresh players</button>
+<p>Choose once for every MPRIS2 Media button. Start a player to make it appear here.</p>
+</section>
+<p id="shared-note" hidden>All controls follow the player selected on an Album Artwork or Play/Pause button.</p>
+<label id="status-option" hidden><input id="show-status" type="checkbox"> Show playback status text</label>
+<section id="artwork-layout" hidden>
+<label for="artwork-grid">Artwork layout</label>
+<select id="artwork-grid"><option value="0">Auto — detect by button position</option><option value="1">Single button</option><option value="2">2 × 2 — four buttons</option><option value="3">3 × 3 — nine buttons</option></select>
+<p id="artwork-auto-note">Arrange a complete square of 4 or 9 Album Artwork buttons; each tile is detected automatically from its deck position.</p>
+<div id="tile-settings" hidden>
+<label for="artwork-position">This button's tile</label>
+<select id="artwork-position"></select>
+<p>Arrange Album Artwork buttons in a square. Choose the same layout on each button, then number tiles left to right, top to bottom.</p>
+<pre id="tile-map" aria-label="Tile numbering"></pre>
+</div>
+</section>
+<p id="artwork-note" hidden>Displays the selected player's album cover. Select this button in OpenDeck to choose a player above.</p>
+<p id="status" role="status">Waiting for OpenDeck…</p>
+<script src="inspector.js"></script>
+</html>

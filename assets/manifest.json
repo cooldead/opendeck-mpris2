@@ -1,0 +1,214 @@
+{
+  "Name": "MPRIS2 Media",
+  "Author": "cooldead (based on nekename / OpenAction MPRIS)",
+  "Version": "0.4.0",
+  "Category": "MPRIS2 Media",
+  "Icon": "icons/playpause",
+  "OS": [
+    {
+      "Platform": "linux"
+    }
+  ],
+  "CodePaths": {
+    "x86_64-unknown-linux-gnu": "opendeck-mpris2-x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu": "opendeck-mpris2-aarch64-unknown-linux-gnu"
+  },
+  "CodePathLin": "opendeck-mpris2-x86_64-unknown-linux-gnu",
+  "Actions": [
+    {
+      "UUID": "com.cooldead.mpris2.artwork",
+      "Name": "Album Artwork",
+      "Icon": "icons/artwork",
+      "Tooltip": "Album cover and shared media player selection",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "icons/artwork",
+          "Title": ""
+        }
+      ]
+    },
+    {
+      "UUID": "com.cooldead.mpris2.playpause",
+      "Name": "Play/Pause",
+      "Icon": "icons/playpause",
+      "Tooltip": "Toggle the playback state",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Name": "Paused / Stopped",
+          "Image": "icons/play",
+          "Title": ""
+        },
+        {
+          "Name": "Playing",
+          "Image": "icons/pause",
+          "Title": ""
+        }
+      ],
+      "DisableAutomaticStates": true
+    },
+    {
+      "UUID": "com.cooldead.mpris2.stop",
+      "Name": "Stop",
+      "Icon": "icons/stop",
+      "Tooltip": "Stop playback",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "icons/stop"
+        }
+      ]
+    },
+    {
+      "UUID": "com.cooldead.mpris2.previous",
+      "Name": "Previous",
+      "Icon": "icons/previous",
+      "Tooltip": "Go to the previous track",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "icons/previous"
+        }
+      ]
+    },
+    {
+      "UUID": "com.cooldead.mpris2.next",
+      "Name": "Next",
+      "Icon": "icons/next",
+      "Tooltip": "Go to the next track",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "icons/next"
+        }
+      ]
+    },
+    {
+      "UUID": "com.cooldead.mpris2.repeat",
+      "Name": "Repeat",
+      "Icon": "icons/repeat_playlist",
+      "Tooltip": "Cycle repeat: Off \u2192 Playlist \u2192 One Song \u2192 Off",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "icons/repeat_none",
+          "Name": "Off",
+          "Title": "",
+          "TitleAlignment": "bottom",
+          "FontSize": 12
+        },
+        {
+          "Image": "icons/repeat_playlist",
+          "Name": "Playlist",
+          "Title": "",
+          "TitleAlignment": "bottom",
+          "FontSize": 12
+        },
+        {
+          "Image": "icons/repeat_track",
+          "Name": "One Song",
+          "Title": "",
+          "TitleAlignment": "bottom",
+          "FontSize": 12
+        }
+      ],
+      "DisableAutomaticStates": true
+    },
+    {
+      "UUID": "com.cooldead.mpris2.shuffle",
+      "Name": "Shuffle",
+      "Icon": "icons/shuffle_on",
+      "Tooltip": "Toggle shuffle",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "icons/shuffle_off",
+          "Name": "Off",
+          "Title": "",
+          "TitleAlignment": "bottom",
+          "FontSize": 12
+        },
+        {
+          "Image": "icons/shuffle_on",
+          "Name": "On",
+          "Title": "",
+          "TitleAlignment": "bottom",
+          "FontSize": 12
+        }
+      ],
+      "DisableAutomaticStates": true
+    },
+    {
+      "UUID": "com.cooldead.mpris2.seekbackwards",
+      "Name": "Seek Backwards",
+      "Icon": "icons/seek_backwards",
+      "Tooltip": "Seek 10 seconds backwards",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "icons/seek_backwards"
+        }
+      ]
+    },
+    {
+      "UUID": "com.cooldead.mpris2.seekforwards",
+      "Name": "Seek Forwards",
+      "Icon": "icons/seek_forwards",
+      "Tooltip": "Seek 10 seconds forwards",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "icons/seek_forwards"
+        }
+      ]
+    },
+    {
+      "UUID": "com.cooldead.mpris2.volumeup",
+      "Name": "Volume Up",
+      "Icon": "icons/volume_up",
+      "Tooltip": "Increase the player volume",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "icons/volume_up"
+        }
+      ]
+    },
+    {
+      "UUID": "com.cooldead.mpris2.volumedown",
+      "Name": "Volume Down",
+      "Icon": "icons/volume_down",
+      "Tooltip": "Decrease the player volume",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "icons/volume_down"
+        }
+      ]
+    }
+  ],
+  "PropertyInspectorPath": "inspector.html"
+}
