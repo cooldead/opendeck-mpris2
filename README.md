@@ -19,6 +19,25 @@ This plugin lets your Stream Deck control a specific media player instead of whi
 - One shared media-player selection for all plugin buttons
 - Automatically reconnects when a selected player is closed and reopened
 
+### Plugin controls
+
+<table>
+  <tr>
+    <td align="center"><img src="assets/icons/artwork.png" width="72"><br><sub>Artwork</sub></td>
+    <td align="center"><img src="assets/icons/previous.png" width="72"><br><sub>Previous</sub></td>
+    <td align="center"><img src="assets/icons/playpause.png" width="72"><br><sub>Play / Pause</sub></td>
+    <td align="center"><img src="assets/icons/next.png" width="72"><br><sub>Next</sub></td>
+    <td align="center"><img src="assets/icons/stop.png" width="72"><br><sub>Stop</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/icons/repeat_none.png" width="72"><br><sub>Repeat</sub></td>
+    <td align="center"><img src="assets/icons/shuffle_off.png" width="72"><br><sub>Shuffle</sub></td>
+    <td align="center"><img src="assets/icons/seek_backwards.png" width="72"><br><sub>Seek Back</sub></td>
+    <td align="center"><img src="assets/icons/seek_forwards.png" width="72"><br><sub>Seek Forward</sub></td>
+    <td align="center"><img src="assets/icons/volume_up.png" width="72"><br><sub>Volume</sub></td>
+  </tr>
+</table>
+
 # Installation
 
 > [!IMPORTANT]
