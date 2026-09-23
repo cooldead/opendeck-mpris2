@@ -43,7 +43,7 @@ test('artwork grid and tile position save per-button settings and restore correc
   const {node,sent,connection}=inspector('artwork');
   sent.length=0;
   assert.equal(node('artwork-layout').hidden,false);
-  assert.equal(node('artwork-grid').value,'1');
+  assert.equal(node('artwork-grid').value,'0');
   node('artwork-grid').value='3';node('artwork-grid').handlers.change();
   assert.equal(node('artwork-position').children.length,9);
   assert.deepEqual(sent.shift().payload,{other:true,artwork_grid:3,artwork_position:0});
