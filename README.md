@@ -4,6 +4,8 @@ Simple Linux media controls for OpenDeck using MPRIS2.
 
 This plugin lets your Stream Deck control a specific media player instead of whichever MPRIS2 player D-Bus happens to return first. It was created primarily for Strawberry, but it can work with other MPRIS2-compatible players.
 
+![MPRIS2 Media running in OpenDeck](assets/demo.png)
+
 ## Features
 
 - Album artwork, including automatic 2×2 and 3×3 cover layouts
@@ -16,25 +18,6 @@ This plugin lets your Stream Deck control a specific media player instead of whi
 - Volume down / up 5%
 - One shared media-player selection for all plugin buttons
 - Automatically reconnects when a selected player is closed and reopened
-
-### Plugin controls
-
-<table>
-  <tr>
-    <td align="center"><img src="assets/icons/artwork.png" width="72"><br><sub>Artwork</sub></td>
-    <td align="center"><img src="assets/icons/previous.png" width="72"><br><sub>Previous</sub></td>
-    <td align="center"><img src="assets/icons/playpause.png" width="72"><br><sub>Play / Pause</sub></td>
-    <td align="center"><img src="assets/icons/next.png" width="72"><br><sub>Next</sub></td>
-    <td align="center"><img src="assets/icons/stop.png" width="72"><br><sub>Stop</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="assets/icons/repeat_none.png" width="72"><br><sub>Repeat</sub></td>
-    <td align="center"><img src="assets/icons/shuffle_off.png" width="72"><br><sub>Shuffle</sub></td>
-    <td align="center"><img src="assets/icons/seek_backwards.png" width="72"><br><sub>Seek Back</sub></td>
-    <td align="center"><img src="assets/icons/seek_forwards.png" width="72"><br><sub>Seek Forward</sub></td>
-    <td align="center"><img src="assets/icons/volume_up.png" width="72"><br><sub>Volume</sub></td>
-  </tr>
-</table>
 
 # Installation
 
