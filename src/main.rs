@@ -20,6 +20,12 @@ pub struct Settings {
 	pub artwork_position: u8,
 }
 static SETTINGS: LazyLock<RwLock<HashMap<String, Settings>>> = LazyLock::new(Default::default);
+/// Buttons whose image must be sent again even if the player state didn't change: OpenDeck
+/// redraws a reappearing button (page/profile switch, device reconnect) from its stored state.
+static REDRAW: LazyLock<std::sync::Mutex<std::collections::HashSet<String>>> = LazyLock::new(Default::default);
+pub static REDRAW_ALL: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// How long to keep showing the last good state when the player doesn't answer.
+const GRACE: Duration = Duration::from_secs(10);
 const ACTIONS: &[&str] = &[
 	ArtworkAction::UUID,
 	PlayPauseAction::UUID,
@@ -39,6 +45,7 @@ async fn remember(instance: &Instance, settings: &Settings) {
 		.write()
 		.await
 		.insert(instance.instance_id.clone(), settings.clone());
+	REDRAW.lock().unwrap().insert(instance.instance_id.clone());
 }
 async fn forget(instance: &Instance) {
 	SETTINGS.write().await.remove(&instance.instance_id);
@@ -160,8 +167,17 @@ async fn watch_players() {
 	let mut art = artwork::Cache::new();
 	let mut tiles = artwork::TileCache::default();
 	let mut last_images = HashMap::new();
+	let mut last_good: Option<(State, std::time::Instant)> = None;
 	loop {
 		tokio::time::sleep(Duration::from_secs(1)).await;
+		if REDRAW_ALL.swap(false, std::sync::atomic::Ordering::Relaxed) {
+			last.clear();
+			last_images.clear();
+		}
+		for id in REDRAW.lock().unwrap().drain() {
+			last.remove(&id);
+			last_images.remove(&id);
+		}
 		let settings = SETTINGS.read().await.clone();
 		last.retain(|id, _| settings.contains_key(id));
 		last_images.retain(|id, _| settings.contains_key(id));
@@ -172,8 +188,16 @@ async fn watch_players() {
 			continue;
 		};
 		let current = match tokio::time::timeout(Duration::from_secs(3), state(&player)).await {
-			Ok(Ok(state)) => state,
-			_ => State::default(),
+			Ok(Ok(state)) => {
+				last_good = Some((state.clone(), std::time::Instant::now()));
+				state
+			}
+			// A busy or backgrounded player can miss a beat; don't flash the buttons to
+			// their default images for that. Only show "Offline" once it stays silent.
+			_ => match &last_good {
+				Some((state, at)) if at.elapsed() < GRACE => state.clone(),
+				_ => State::default(),
+			},
 		};
 		let artwork_instances = visible_instances(ArtworkAction::UUID).await;
 		let mut by_device: HashMap<String, std::collections::HashSet<(u8, u8)>> = HashMap::new();

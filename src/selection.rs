@@ -41,6 +41,11 @@ impl GlobalEventHandler for Handler {
 		*GLOBAL.write().await = Some(settings);
 		Ok(())
 	}
+	async fn system_did_wake_up(&self, _: SystemDidWakeUpEvent) -> OpenActionResult<()> {
+		// Decks are re-initialised after resume; send every image again.
+		crate::REDRAW_ALL.store(true, std::sync::atomic::Ordering::Relaxed);
+		Ok(())
+	}
 }
 
 pub async fn inspector(instance: &Instance, payload: &Value) -> OpenActionResult<()> {

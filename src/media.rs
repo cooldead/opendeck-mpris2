@@ -53,25 +53,72 @@ pub async fn select(conn: &Connection, requested: &str) -> Result<Proxy<'static>
 			})?;
 		return player_proxy(conn, name).await;
 	}
-	let mut candidates = Vec::new();
+	let mut statuses = Vec::new();
 	for name in names {
 		let proxy = player_proxy(conn, name.clone()).await?;
-		if let Ok(status) = proxy.get_property::<String>("PlaybackStatus").await {
-			// Prefer playing players, then Strawberry, then a stable bus-name order.
-			candidates.push((
-				status != "Playing",
-				!matches_player(&name, "strawberry"),
-				name,
-			));
+		// A player that doesn't answer quickly (throttled in the background) keeps its old status.
+		match tokio::time::timeout(
+			std::time::Duration::from_millis(800),
+			proxy.get_property::<String>("PlaybackStatus"),
+		)
+		.await
+		{
+			Ok(Ok(status)) => statuses.push((name, status)),
+			_ => {
+				let known = AUTO.lock().unwrap().seen.get(&name).cloned();
+				statuses.push((name, known.unwrap_or_default()));
+			}
 		}
 	}
-	candidates.sort();
-	let name = candidates
-		.into_iter()
-		.next()
-		.ok_or_else(|| anyhow::anyhow!("No MPRIS2 players found"))?
-		.2;
+	let name = AUTO
+		.lock()
+		.unwrap()
+		.choose(&statuses)
+		.ok_or_else(|| anyhow::anyhow!("No MPRIS2 players found"))?;
 	player_proxy(conn, name).await
+}
+
+/// "auto" player choice. Follows the player that most recently *started* playing and stays
+/// with it while it is paused, instead of jumping to whichever player sorts first (a paused
+/// music app in the background used to lose its tiles to an idle browser).
+#[derive(Default)]
+pub struct Auto {
+	current: Option<String>,
+	seen: std::collections::HashMap<String, String>,
+}
+static AUTO: std::sync::LazyLock<std::sync::Mutex<Auto>> = std::sync::LazyLock::new(Default::default);
+
+impl Auto {
+	pub fn choose(&mut self, statuses: &[(String, String)]) -> Option<String> {
+		let rank = |name: &String| (!matches_player(name, "strawberry"), name.clone());
+		let playing = |(_, s): &&(String, String)| s == "Playing";
+		let started = statuses
+			.iter()
+			.filter(playing)
+			.filter(|(n, _)| self.seen.get(n).is_some_and(|old| old != "Playing"))
+			.map(|(n, _)| n)
+			.min_by_key(|n| rank(n));
+		let present = |n: &String| statuses.iter().any(|(m, _)| m == n);
+		let current = self.current.clone().filter(present);
+		let current_playing = current
+			.as_ref()
+			.is_some_and(|c| statuses.iter().any(|(n, s)| n == c && s == "Playing"));
+		let any_playing = statuses.iter().filter(playing).map(|(n, _)| n).min_by_key(|n| rank(n));
+		let choice = if let Some(n) = started {
+			Some(n.clone())
+		} else if current_playing {
+			current
+		} else if let Some(n) = any_playing {
+			Some(n.clone())
+		} else if current.is_some() {
+			current
+		} else {
+			statuses.iter().map(|(n, _)| n).min_by_key(|n| rank(n)).cloned()
+		};
+		self.seen = statuses.iter().cloned().collect();
+		self.current = choice.clone();
+		choice
+	}
 }
 
 pub fn next_repeat(current: &str) -> &'static str {
@@ -154,6 +201,41 @@ mod tests {
 			"strawberry"
 		));
 		assert!(!matches_player("org.mpris.MediaPlayer2.vlc", "strawberry"));
+	}
+	fn st(list: &[(&str, &str)]) -> Vec<(String, String)> {
+		list.iter()
+			.map(|(n, s)| (format!("{PREFIX}{n}"), s.to_string()))
+			.collect()
+	}
+	#[test]
+	fn auto_stays_on_a_paused_player_instead_of_jumping_to_an_idle_one() {
+		let mut auto = Auto::default();
+		let pick = |a: &mut Auto, l: &[(&str, &str)]| a.choose(&st(l)).unwrap().replace(PREFIX, "");
+		assert_eq!(pick(&mut auto, &[("brave", "Paused"), ("cider", "Playing")]), "cider");
+		// Cider pauses in the background: keep showing Cider, not the alphabetically first Brave.
+		assert_eq!(pick(&mut auto, &[("brave", "Paused"), ("cider", "Paused")]), "cider");
+		assert_eq!(pick(&mut auto, &[("brave", "Stopped"), ("cider", "Paused")]), "cider");
+		// Something else starts playing: follow it.
+		assert_eq!(pick(&mut auto, &[("brave", "Playing"), ("cider", "Paused")]), "brave");
+		// Cider starts again while Brave still plays: the newest one wins.
+		assert_eq!(pick(&mut auto, &[("brave", "Playing"), ("cider", "Playing")]), "cider");
+		assert_eq!(pick(&mut auto, &[("brave", "Playing"), ("cider", "Playing")]), "cider");
+		// Cider quits: fall back to what is playing.
+		assert_eq!(pick(&mut auto, &[("brave", "Playing")]), "brave");
+		assert!(auto.choose(&[]).is_none());
+	}
+	#[test]
+	fn auto_first_choice_prefers_playing_then_strawberry() {
+		let mut auto = Auto::default();
+		assert_eq!(
+			auto.choose(&st(&[("a", "Paused"), ("strawberry", "Paused")])).unwrap(),
+			format!("{PREFIX}strawberry")
+		);
+		let mut auto = Auto::default();
+		assert_eq!(
+			auto.choose(&st(&[("a", "Paused"), ("z", "Playing")])).unwrap(),
+			format!("{PREFIX}z")
+		);
 	}
 	#[test]
 	fn repeat_cycles() {

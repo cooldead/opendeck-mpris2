@@ -98,18 +98,19 @@ impl Cache {
 		if key != self.key
 			|| (self.image.is_none() && self.checked.elapsed() > Duration::from_secs(5))
 		{
+			let same_track = self.key.split('\n').take(2).eq(key.split('\n').take(2));
 			self.key = key;
 			self.checked = Instant::now();
-			self.image =
-				match tokio::time::timeout(Duration::from_secs(4), fetch(&self.client, source))
-					.await
-				{
-					Ok(Ok(image)) => Some(image),
-					result => {
-						log::debug!("Artwork unavailable: {result:?}");
-						None
+			match tokio::time::timeout(Duration::from_secs(4), fetch(&self.client, source)).await {
+				Ok(Ok(image)) => self.image = Some(image),
+				result => {
+					log::debug!("Artwork unavailable: {result:?}");
+					// A failed refresh of the same track keeps its cover instead of the default icon.
+					if !same_track {
+						self.image = None;
 					}
-				};
+				}
+			}
 		}
 		self.image.clone()
 	}
@@ -133,7 +134,8 @@ mod tests {
 			image
 		);
 		tokio::fs::write(&path, b"not an image").await.unwrap();
-		assert!(cache.get("strawberry", "track1", &source).await.is_none());
+		// A failed refresh of the same track keeps the cover it had.
+		assert_eq!(cache.get("strawberry", "track1", &source).await.unwrap(), image);
 		assert!(cache.get("strawberry", "track2", "").await.is_none());
 		tokio::fs::remove_file(&path).await.unwrap();
 		assert!(cache.get("strawberry", "track3", &source).await.is_none());
